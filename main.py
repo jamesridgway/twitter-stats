@@ -1,6 +1,6 @@
+import argparse
 import calendar
 import os
-import argparse
 import sys
 
 import matplotlib.pyplot as plt
@@ -10,6 +10,8 @@ import seaborn as sb
 import tweepy
 from dateutil import tz
 from dotenv import load_dotenv
+
+from follow_locations import twitter_followers
 
 
 def tweet_heatmap(username):
@@ -27,7 +29,7 @@ def tweet_heatmap(username):
                                   max_results=100).flatten(limit=1000):
         date_times.append(tweet.created_at.astimezone(to_zone))
 
-    df = pd.DataFrame(date_times,columns=['date'])
+    df = pd.DataFrame(date_times, columns=['date'])
     df['day_of_week'] = df.apply(lambda row: row['date'].weekday(), axis=1)
     df['hour'] = df.apply(lambda row: row['date'].hour, axis=1)
     df = df.groupby(['day_of_week', 'hour']).size().reset_index(name='counts')
@@ -58,9 +60,16 @@ if __name__ == '__main__':
     data_cleanser_parser = subparsers.add_parser(TWEET_HEATMAP, help='produce a heatmap of most recent tweets')
     data_cleanser_parser.add_argument('--username', type=str, help='twitter username')
 
+    # Followers Parser
+    FOLLOWERS = 'followers'
+    data_cleanser_parser = subparsers.add_parser(FOLLOWERS,
+                                                 help='produce a list of information about twitter followers')
+    data_cleanser_parser.add_argument('--username', type=str, help='twitter username')
+
     parsed_args = parser.parse_args(sys.argv[1:])
     if parsed_args.command == TWEET_HEATMAP:
         tweet_heatmap(parsed_args.username)
+    if parsed_args.command == FOLLOWERS:
+        twitter_followers(parsed_args.username)
     else:
         print('Command not recognised')
-
